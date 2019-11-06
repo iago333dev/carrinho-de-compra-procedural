@@ -1,0 +1,219 @@
+
+drop database mydb;
+
+SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
+SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
+SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
+
+-- -----------------------------------------------------
+-- Schema mydb
+-- -----------------------------------------------------
+
+-- -----------------------------------------------------
+-- Schema mydb
+-- -----------------------------------------------------
+CREATE SCHEMA IF NOT EXISTS `mydb` DEFAULT CHARACTER SET utf8 ;
+USE `mydb` ;
+
+-- -----------------------------------------------------
+-- Table `mydb`.`login`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`login` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `usuario` VARCHAR(32) NOT NULL,
+  `senha` VARCHAR(32) NOT NULL,
+  `nivel` ENUM('Cliente', 'Adm', 'Funcionario') NOT NULL,
+  PRIMARY KEY (`id`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`cliente`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`cliente` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `nome` VARCHAR(45) NOT NULL,
+  `cpf` VARCHAR(14) NOT NULL,
+  `email` VARCHAR(45) NOT NULL,
+  `telefone` VARCHAR(13) NOT NULL,
+  `celular` VARCHAR(14) NOT NULL,
+  `nascimento` DATE NOT NULL,
+  `login_id` INT(11) NOT NULL,
+  PRIMARY KEY (`id`, `login_id`),
+  INDEX `fk_cliente_login1_idx` (`login_id` ASC),
+  CONSTRAINT `fk_cliente_login1`
+    FOREIGN KEY (`login_id`)
+    REFERENCES `mydb`.`login` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`empresa`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`empresa` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `nome` VARCHAR(45) NOT NULL,
+  `cnpj` VARCHAR(18) NOT NULL,
+  PRIMARY KEY (`id`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`encomenda_saida`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`encomenda_saida` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `codigo` VARCHAR(45) NOT NULL,
+  `data_entrada_pedido` DATE NULL DEFAULT NULL,
+  `data_entrega_pedido` DATE NULL DEFAULT NULL,
+  `valor_total` DECIMAL(7,2) NOT NULL,
+  `Cliente_id` INT(11) NOT NULL,
+  `Cliente_login_id` INT(11) NOT NULL,
+  `Cliente_endereco_id` INT(11) NOT NULL,
+  `Empresa_id` INT(11) NOT NULL,
+  PRIMARY KEY (`id`, `Cliente_id`, `Cliente_login_id`, `Cliente_endereco_id`, `Empresa_id`),
+  INDEX `fk_Encomenda_saida_Cliente1_idx` (`Cliente_id` ASC, `Cliente_login_id` ASC, `Cliente_endereco_id` ASC),
+  INDEX `fk_Encomenda_saida_Empresa1_idx` (`Empresa_id` ASC),
+  CONSTRAINT `fk_Encomenda_saida_Cliente1`
+    FOREIGN KEY (`Cliente_id` , `Cliente_login_id`)
+    REFERENCES `mydb`.`cliente` (`id` , `login_id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_Encomenda_saida_Empresa1`
+    FOREIGN KEY (`Empresa_id`)
+    REFERENCES `mydb`.`empresa` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`endereco`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`endereco` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `logradouro` VARCHAR(45) NOT NULL,
+  `bairro` VARCHAR(45) NOT NULL,
+  `cep` VARCHAR(10) NOT NULL,
+  `cidade` VARCHAR(45) NOT NULL,
+  `uf` VARCHAR(2) NOT NULL,
+  `pais` VARCHAR(45) NOT NULL,
+  `Login_id` INT(11) NOT NULL,
+  PRIMARY KEY (`id`, `Login_id`),
+  INDEX `fk_Endereco_Login1_idx` (`Login_id` ASC),
+  CONSTRAINT `fk_Endereco_Login1`
+    FOREIGN KEY (`Login_id`)
+    REFERENCES `mydb`.`login` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`estoque_entrada`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`estoque_entrada` (
+  `idestoque` INT(11) NOT NULL AUTO_INCREMENT,
+  `Empresa_id` INT(11) NOT NULL,
+  PRIMARY KEY (`idestoque`, `Empresa_id`),
+  INDEX `fk_Estoque_entrada_Empresa1_idx` (`Empresa_id` ASC),
+  CONSTRAINT `fk_Estoque_entrada_Empresa1`
+    FOREIGN KEY (`Empresa_id`)
+    REFERENCES `mydb`.`empresa` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`funcionario`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`funcionario` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `nome` VARCHAR(45) NOT NULL,
+  `cpf` VARCHAR(14) NOT NULL,
+  `email` VARCHAR(45) NOT NULL,
+  `telefone` VARCHAR(13) NOT NULL,
+  `celular` VARCHAR(14) NOT NULL,
+  `nascimento` DATE NOT NULL,
+  `login_id` INT(11) NOT NULL,
+  `Empresa_id` INT(11) NOT NULL,
+  PRIMARY KEY (`id`, `login_id`, `Empresa_id`),
+  INDEX `fk_funcionario_login1_idx` (`login_id` ASC),
+  INDEX `fk_Funcionario_Empresa1_idx` (`Empresa_id` ASC),
+  CONSTRAINT `fk_Funcionario_Empresa1`
+    FOREIGN KEY (`Empresa_id`)
+    REFERENCES `mydb`.`empresa` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_funcionario_login1`
+    FOREIGN KEY (`login_id`)
+    REFERENCES `mydb`.`login` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
+
+drop table produto;
+-- -----------------------------------------------------
+-- Table `mydb`.`produto`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`produto` (
+  `id` INT(11),
+  `nome` VARCHAR(45),
+  `validade` DATE ,
+  `data_entrada` DATE,
+  `data_saida` DATE,
+  `preco_compra` DECIMAL(5,2),
+  `preco_venda` DECIMAL(5,2) ,
+  `Marca` VARCHAR(45),
+  `Categoria` ENUM('Alimentos', 'Eletrodomesticos', 'Telefonia', 'Informatica', 'Moveis', 'Higiene'),
+  `Quantidade` INT(11),
+  `Imagem1` VARCHAR(45),
+  `Imagem2` VARCHAR(45),
+  `Imagem3` VARCHAR(45))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`produto_encomenda`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`produto_encomenda` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT primary key,
+  `Quantidade` INT(11) NOT NULL,
+  `Produto_id` INT(11) NOT NULL,
+  `Produto_Estoque_entrada_idestoque` INT(11) NOT NULL,
+  `Produto_Estoque_entrada_Empresa_id` INT(11) NOT NULL,
+  `Produto_Estoque_entrada_Empresa_Endereco_id` INT(11) NOT NULL,
+  `Encomenda_saida_id` INT(11) NOT NULL,
+  `Encomenda_saida_Cliente_id` INT(11) NOT NULL,
+  `Encomenda_saida_Cliente_login_id` INT(11) NOT NULL,
+  `Encomenda_saida_Cliente_endereco_id` INT(11) NOT NULL,
+  `Encomenda_saida_Empresa_id` INT(11) NOT NULL
+ )
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
+
+
+insert into produto (id,nome,preco_venda,Marca,Categoria,Quantidade) values (
+DEFAULT,"Produto Ficticio",333.50,"Mari",'Telefonia',300);
+
+
+
+
+
+CREATE TABLE `produtos` (
+  `id` int(11) NOT NULL,
+  `nome` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `preco` decimal(10,2) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
